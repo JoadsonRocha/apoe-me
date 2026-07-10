@@ -32,6 +32,10 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -103,6 +107,14 @@
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             margin-bottom: 60px;
+            transition: padding 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 12px 0;
+            background: rgba(3, 7, 18, 0.85);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border-bottom-color: var(--primary-glow);
         }
 
         .logo {
@@ -351,6 +363,13 @@
             background: var(--primary);
             border-color: var(--primary);
             box-shadow: 0 10px 20px var(--primary-glow);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
         }
 
         .tier-card.featured .support-btn:hover {
@@ -527,6 +546,8 @@
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
+        <!-- Interactive Mouse Glow -->
+        <div id="mouse-glow" style="position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%); border-radius: 50%; filter: blur(60px); pointer-events: none; transform: translate(-50%, -50%); transition: opacity 0.3s; opacity: 0; z-index: -1;"></div>
     </div>
 
     <div class="container">
@@ -570,7 +591,7 @@
 
         <div class="tiers-grid reveal">
             <!-- Tier 1 -->
-            <div class="tier-card">
+            <div class="tier-card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
                 <div class="tier-icon">☕</div>
                 <div class="tier-name">Cafezinho</div>
                 <div class="tier-price">R$5 <span>/ uma vez</span></div>
@@ -583,7 +604,7 @@
             </div>
 
             <!-- Tier 2 -->
-            <div class="tier-card featured">
+            <div class="tier-card featured" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
                 <div class="tier-icon">🍕</div>
                 <div class="tier-name">Apoiador Ativo</div>
                 <div class="tier-price">R$15 <span>/ uma vez</span></div>
@@ -596,7 +617,7 @@
             </div>
 
             <!-- Tier 3 -->
-            <div class="tier-card">
+            <div class="tier-card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
                 <div class="tier-icon">🚀</div>
                 <div class="tier-name">Patrono Open Source</div>
                 <div class="tier-price">R$50 <span>/ uma vez</span></div>
@@ -623,8 +644,8 @@
                         <span class="payment-title">Pix (Brasil)</span>
                     </div>
                     <div class="payment-key" id="pix-key">joadsonrocha@exemplo.com.br</div>
-                    <button class="copy-btn" onclick="copyText('pix-key')">
-                        <i class="fas fa-copy"></i> Copiar Chave
+                    <button class="copy-btn" id="btn-copy-pix" onclick="copyText('pix-key')">
+                        <i class="fas fa-copy" id="icon-copy-pix"></i> <span id="text-copy-pix">Copiar Chave</span>
                     </button>
                 </div>
 
@@ -678,15 +699,57 @@
             }
         }
 
-        window.addEventListener("scroll", reveal);
+        window.addEventListener("scroll", () => {
+            reveal();
+            
+            // Navbar dynamic effect
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
         // Initial check
         reveal();
+
+        // Interactive Mouse Glow
+        const mouseGlow = document.getElementById('mouse-glow');
+        document.addEventListener('mousemove', (e) => {
+            if (mouseGlow) {
+                mouseGlow.style.opacity = '1';
+                mouseGlow.style.left = e.pageX + 'px';
+                mouseGlow.style.top = e.pageY + 'px';
+            }
+        });
+        document.addEventListener('mouseleave', () => {
+            if (mouseGlow) mouseGlow.style.opacity = '0';
+        });
 
         // Copy Text Functionality
         function copyText(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
                 showToast();
+                
+                // Visual feedback on button
+                const btnIcon = document.getElementById('icon-copy-pix');
+                const btnText = document.getElementById('text-copy-pix');
+                const btn = document.getElementById('btn-copy-pix');
+                
+                if (btnIcon && btnText && btn) {
+                    btnIcon.className = 'fas fa-check';
+                    btnIcon.style.color = 'var(--accent)';
+                    btnText.innerText = 'Copiado!';
+                    btn.style.borderColor = 'var(--accent)';
+                    
+                    setTimeout(() => {
+                        btnIcon.className = 'fas fa-copy';
+                        btnIcon.style.color = '';
+                        btnText.innerText = 'Copiar Chave';
+                        btn.style.borderColor = '';
+                    }, 2500);
+                }
             });
         }
 
@@ -704,5 +767,8 @@
             });
         }
     </script>
+    
+    <!-- Vanilla Tilt -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js" defer></script>
 </body>
 </html>
